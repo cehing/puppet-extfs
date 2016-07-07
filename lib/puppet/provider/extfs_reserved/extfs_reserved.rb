@@ -40,7 +40,7 @@ Puppet::Type.type(:extfs_reserved).provide(:extfs_reserved, :parent => Puppet::P
 
   def get_reservations
     blocks = {}
-    output = tune2fs('-l', @resource[:name]).grep(/block count/i)
+    output = IO.popen("/sbin/tune2fs -l #{@resource[:name]} | /bin/grep -i 'block count'").readlines
 
     output.each do |line|
       column, value = line.split(':')
