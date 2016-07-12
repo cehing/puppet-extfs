@@ -22,16 +22,20 @@ Puppet::Type.type(:extfs_reserved).provide(:extfs_reserved, :parent => Puppet::P
     Puppet.debug("Setting reservation on #{resource[:name]}")
   end
 
-
   def exists?
     blocks = get_reservations
 
     if @resource[:reservation_type] == :block
+
+      Puppet.debug("reservation_type == block AND #{@resource[:reserve].to_i} == #{blocks['reserved_block_count']}")
       return true if @resource[:reserve].to_i == blocks['reserved_block_count']
+
     else
       percent_reserved = calc_percentage(blocks)
-      return true if @resource[:reserve].to_f == percent_reserved
-    end
+      Puppet.debug("reservation_type == percent AND #{@resource[:reserve].to_f.round} == #{percent_reserved.to_f.round}")
+      return true if @resource[:reserve].to_f.round == percent_reserved.to_f.round
+
+  end
 
     false
   end
@@ -40,6 +44,7 @@ Puppet::Type.type(:extfs_reserved).provide(:extfs_reserved, :parent => Puppet::P
 
   def get_reservations
     blocks = {}
+    Puppet.debug("Executing /sbin/tune2fs -l #{@resource[:name]} | /bin/grep -i 'block count'")
     output = IO.popen("/sbin/tune2fs -l #{@resource[:name]} | /bin/grep -i 'block count'").readlines
 
     output.each do |line|
